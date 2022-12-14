@@ -37,3 +37,9 @@ Read `./src/README.md` for installation guide
 * Let the user choose which map he wants to play in. This can actually be done by changing an argument in the code : at line 71 of `./src/static/js/GameManager.js`, change the first argument with one of these values :  `map1`, `map2` or `map3`. You will need to reload the cache to see the new map `CTRL+F5`.
 
 * Score.
+
+
+
+
+
+https://dev.to/cassiolacerda/automatically-refresh-the-browser-on-node-express-server-changes-x1f680-1k0o

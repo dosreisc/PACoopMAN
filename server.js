@@ -1,14 +1,22 @@
 
 const express = require('express');
+//const GameManager = require('./static/js/GameManager');
+//const Enemy = require('./static/js/Enemy');
+//const Player = require('./static/js/Player');
+//const MapGenerator = require('./static/js/MapGenerator');
 const app = express();
 const http = require('http');
 const server = http.createServer(app);
+const fs = require("fs");
+const url = require("url");
 const io = require('socket.io')();
+const mime = require("mime");
 //const { FRAME_RATE } = require('./constants');
 const { makeid } = require('./utils');
 
 //const state = {};
 //const clientRooms = {};
+
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
@@ -19,8 +27,50 @@ app.get('/solo', (req, res) => {
     res.sendFile(__dirname + '/solo/index.html');
 })
 
+/********************************** ROOTING FOR STATIC FILES IN SOLO MODE ********************************** */
+app.get('/static/js/:fileName', (req, res) => {
+    var js = fs.readFileSync("./static/js/"+ req.params.fileName, "utf8");
+    res.set('Content-Type', 'text/javascript');
+    res.send(js);
+})
+app.get('/static/js/lib/:fileName', (req, res) => {
+    var js = fs.readFileSync("./static/js/lib/"+ req.params.fileName, "utf8");
+    res.set('Content-Type', 'text/javascript');
+    res.send(js);
+})
+/*
+app.get('/static/js/Enemy.js', (req, res) => {
+    var js = fs.readFileSync("./static/js/Enemy.js", "utf8");
+    res.write(js);
+})
+
+app.get('/static/js/MapGenerator.js', (req, res) => {
+    var js = fs.readFileSync("./static/js/MapGenerator.js", "utf8");
+    res.write(js);
+})
+
+app.get('/static/js/GameManager.js', (req, res) => {
+    var js = fs.readFileSync("./static/js/GameManager.js", "utf8");
+    res.write(js);
+})
+
+app.get('/static/js/lib/jquery-3.4.1.slim.min.js', (req, res) => {
+    var js = fs.readFileSync("./static/js/lib/jquery-3.4.1.slim.min.js", "utf8");
+    res.write(js);
+})
+
+app.get('/static/js/lib/three.js', (req, res) => {
+    var js = fs.readFileSync("./static/js/lib/three.js", "utf8");
+    res.write(js);
+})*/
 
 server.listen(3000, () => {
+
+    //rooter for javascript staticfile for client side
+    //var pathname = url.parse(request.url).pathname;
+    //console.log("Resquest for " + pathname + "received");
+
+
     console.log('listening on port 3000..');
 })
 /*io.listen(process.env.PORT || 3000,() => {

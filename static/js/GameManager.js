@@ -130,7 +130,7 @@ function checkCollision() {
 
 
 
-/*window.addEventListener("keydown", function (event) {
+window.addEventListener("keydown", function (event) {
 
 	//change player direction
 	if (KEYS[event.code]){
@@ -151,7 +151,7 @@ function checkCollision() {
 		paused = !paused;
 		console.log("pause");
 	}
-});*/
+});
 
 
 // check player collision with food/special food and enemies

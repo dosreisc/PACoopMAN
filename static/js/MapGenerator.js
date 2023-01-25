@@ -5,7 +5,8 @@ function convert2Dto1D(x, y, sz){
 class MapGenerator {
 
     constructor() {}
-
+    
+    
 
     generateMap(id, scene) {
         var map;
@@ -18,6 +19,8 @@ class MapGenerator {
 
         var map_content = [];
 
+        console.log('generateMap()')
+
         // create ground 
         var geometry = new THREE.PlaneGeometry( SIZE, SIZE );
         var material = new THREE.MeshBasicMaterial( {color: 0x000000, side: THREE.DoubleSide} );
@@ -28,7 +31,7 @@ class MapGenerator {
         // send synchronous request
         var request = new XMLHttpRequest();
         //request.overrideMimeType("application/json");
-        request.open('GET', '/get/map/'+id+'/', false);  // `false` makes the request synchronous
+        request.open('GET', '/map/'+id+'/', false);  // `false` makes the request synchronous
         request.send(null);
 
         if (request.status === 200) {
@@ -45,7 +48,6 @@ class MapGenerator {
             path.push([]);
             for (let x = 0; x < SIZE; x++) {
                 i = convert2Dto1D(x,y,SIZE);
-                
                 switch (map_content[i]){ // 
                     case "WALL":
                         offsetX = 1;
@@ -77,7 +79,7 @@ class MapGenerator {
                         var geometry = new THREE.BoxGeometry( wallWidth, wallHeight ,0.6);
                         var material = new THREE.MeshBasicMaterial( {color: 0x0000FF} );
                         var wall = new THREE.Mesh( geometry, material );
-                        // re-position coreectly
+                        // re-position corectly
                         wall.position.x = -wallPosX - wallWidth/2 + (SIZE)/2 ;
                         wall.position.y = -wallPosY - wallHeight/2 + (SIZE)/2 ;
                         // add to scene

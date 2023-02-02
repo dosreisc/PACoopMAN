@@ -32,6 +32,42 @@ const KEYS = {
 	Space : DIRECTION.NONE
 };
 
+
+
+const gameState = {
+	pacman:{
+		pos:{
+			x: 0,
+			y: 0,
+		},
+	},
+	ghostRed:{
+		pos:{
+			x: 0,
+			y: 0,
+		},
+	},
+	ghostGreen:{
+		pos:{
+			x: 0,
+			y: 0,
+		},
+	},
+	ghostPurple:{
+		pos:{
+			x: 0,
+			y: 0,
+		},
+	},
+	ghostWhite:{
+		pos:{
+			x: 0,
+			y: 0,
+		},
+	},
+
+}
+
 var scene;
 var camera;
 var renderer;

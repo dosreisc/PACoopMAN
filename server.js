@@ -20,7 +20,17 @@ app.get('/', (req, res) => {
 });
 
 app.get('/solo', (req, res) => {
-    res.sendFile(__dirname + '/solo/index.html');
+    res.sendFile(__dirname + '/solo.html');
+})
+
+app.get('/coop', (req, res) => {
+    res.sendFile(__dirname + '/coop.html');
+})
+
+app.get('/image/:fileName', (req, res) => {
+    var img = fs.readFileSync("./image/"+ req.params.fileName);
+    res.set('Content-Type', 'image/png');
+    res.send(img);
 })
 
 /********************************** ROOTING FOR STATIC FILES IN SOLO MODE ********************************** */
@@ -38,14 +48,12 @@ app.get('/static/js/lib/:fileName', (req, res) => {
 
 /** ROOTING for map images */
 app.get('/map/:mapID', (req, res) =>{
-    console.log("GET map " + req.params.mapID);
     //var img = fs.readFileSync("./maps/"+req.params.mapID+".png");
     var promise = loadMapData("./maps/"+req.params.mapID+".png");
 
-    console.log("promise " +promise);
     promise.then(function(promiseResult){
         var map = promiseResult;
-        console.log("promise result " +promiseResult);
+        
         res.set('Content-Type', 'application/json');
         res.status(200);
         var json = JSON.stringify(map);
@@ -71,7 +79,7 @@ io.on('connection', client => {
 
     console.log("client connected")
 
-    /*//client.on('keydown', handleKeydown);
+    /*client.on('keydown', handleKeydown);
     client.on('newGame', handleNewGame);
     client.on('joinGame', handleJoinGame);
 

@@ -5,26 +5,28 @@ const http = require('http');
 const server = http.createServer(app);
 const fs = require("fs");
 const url = require("url");
-const io = require('socket.io')();
 
-//const { FRAME_RATE } = require('./constants');
-const { makeid, loadMapData } = require('./utils');
+const io = require('socket.io')(server, {cors: {origin: "*"}});
+
+//const { FRAME_RATE } = require('./constants') 
+//const { makeid, loadMapData } = require('./utils');
+//const { Console } = require('console');
 
 //const state = {};
 //const clientRooms = {};
 
 
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
+    res.sendFile(__dirname + '/frontend/index.html');
     //res.send('<h1>Hello world</h1>'); 
 });
 
 app.get('/solo', (req, res) => {
-    res.sendFile(__dirname + '/solo.html');
+    res.sendFile(__dirname + '/frontend/solo.html');
 })
 
 app.get('/coop', (req, res) => {
-    res.sendFile(__dirname + '/coop.html');
+    res.sendFile(__dirname + '/frontend/coop.html');
 })
 
 app.get('/image/:fileName', (req, res) => {
@@ -71,20 +73,19 @@ server.listen(3000, () => {
 })
 
 
-/*io.listen(process.env.PORT || 3000,() => {
-    console.log('listening on port '+ process.env.PORT.toString() +' or 3000');
-});*/
+
 
 io.on('connection', client => {
 
-    console.log("client connected")
+    console.log("CLIENT CONNECTED");
 
-    /*client.on('keydown', handleKeydown);
+    client.on('keydown', handleKeydown);
     client.on('newGame', handleNewGame);
     client.on('joinGame', handleJoinGame);
 
     function handleJoinGame(roomName) {
-        const room = io.sockets.adapter.rooms[roomName];
+        console.log("function handleJoinGame");
+        /*const room = io.sockets.adapter.rooms[roomName];
     
         let allUsers;
         if (room) {
@@ -99,7 +100,7 @@ io.on('connection', client => {
         if (numClients === 0) {
           client.emit('unknownCode');
           return;
-        } else if (numClients > 1) {
+        } else if (numClients > 4) {
           client.emit('tooManyPlayers');
           return;
         }
@@ -110,10 +111,11 @@ io.on('connection', client => {
         client.number = 2;
         client.emit('init', 2);
         
-        startGameInterval(roomName);
+        startGameInterval(roomName);*/
     }
     function handleNewGame() {
-        let roomName = makeid(5);
+        console.log("function handleNewGame");
+        /*let roomName = makeid(5);
         clientRooms[client.id] = roomName;
         client.emit('gameCode', roomName);
 
@@ -121,11 +123,12 @@ io.on('connection', client => {
 
         client.join(roomName);
         client.number = 1;
-        client.emit('init', 1);
+        client.emit('init', 1);*/
     }
 
     function handleKeydown(keyCode) {
-        const roomName = clientRooms[client.id];
+        Console.log("function handleKeydown");
+        /*const roomName = clientRooms[client.id];
         if (!roomName) {
             return;
         }
@@ -140,20 +143,20 @@ io.on('connection', client => {
 
         if (vel) {
             state[roomName].players[client.number - 1].vel = vel;
-        }
-    }*/
+        }*/
+    }
 });
-/*
+
 function startGameInterval(roomName) {
     const intervalId = setInterval(() => {
         const winner = gameLoop(state[roomName]);
         
         if (!winner) {
-        emitGameState(roomName, state[roomName])
+            emitGameState(roomName, state[roomName])
         } else {
-        emitGameOver(roomName, winner);
-        state[roomName] = null;
-        clearInterval(intervalId);
+            emitGameOver(roomName, winner);
+            state[roomName] = null;
+            clearInterval(intervalId);
         }
     }, 1000 / FRAME_RATE);
 }
@@ -163,6 +166,6 @@ function emitGameOver(room, winner) {
       .emit('gameOver', JSON.stringify({ winner }));
 }
 
-*/
+
 
 

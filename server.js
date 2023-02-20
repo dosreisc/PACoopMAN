@@ -113,7 +113,7 @@ io.on('connection', client => {
 
         client.join(roomName);
         client.number = 1;
-        client.emit('await', 1);
+        client.emit('await', 1, roomName);
     }
 
     function handleKeydown(keyCode) {

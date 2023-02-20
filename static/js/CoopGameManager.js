@@ -11,7 +11,9 @@ socket.on('tooManyPlayers', handleTooManyPlayers);
 const newGameBtn = document.getElementById('newGameButton');
 const joinGameBtn = document.getElementById('joinGameButton');
 const gameCodeInput = document.getElementById('gameCodeInput');
-
+const formularDiv = document.getElementById('formularDiv');
+const loadingDiv = document.getElementById('loadingDiv');
+const gameCodeText = document.getElementById('gameCodeText');
 newGameBtn.addEventListener('click', newGame);
 joinGameBtn.addEventListener('click', joinGame);
 
@@ -55,8 +57,11 @@ function handleGameCode(gameCode){
     console.log("TODO game code " + gameCode);
 }
 
-function handleWaiting(){
-    console.log("waiting");
+function handleWaiting(playerId, roomname){
+    console.log("waiting " + playerId + " " + roomname);
+    formularDiv.style.setProperty('display', 'none', 'important');
+    loadingDiv.style.setProperty('display', 'block');
+    gameCodeText.innerHTML = "Your game code is " + roomname;
 }
 
 function handleUnknownCode (){

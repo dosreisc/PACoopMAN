@@ -9,11 +9,11 @@ const url = require("url");
 const io = require('socket.io')(server, {cors: {origin: "*"}});
 
 //const { FRAME_RATE } = require('./constants') 
-//const { makeid, loadMapData } = require('./utils');
+const { makeid, loadMapData } = require('./utils');
 //const { Console } = require('console');
 
 //const state = {};
-//const clientRooms = {};
+const clientRooms = {};
 
 
 app.get('/', (req, res) => {
@@ -73,8 +73,6 @@ server.listen(3000, () => {
 })
 
 
-
-
 io.on('connection', client => {
 
     console.log("CLIENT CONNECTED");
@@ -82,48 +80,40 @@ io.on('connection', client => {
     client.on('keydown', handleKeydown);
     client.on('newGame', handleNewGame);
     client.on('joinGame', handleJoinGame);
+    
 
-    function handleJoinGame(roomName) {
-        console.log("function handleJoinGame");
-        /*const room = io.sockets.adapter.rooms[roomName];
-    
-        let allUsers;
-        if (room) {
-          allUsers = room.sockets;
-        }
-    
-        let numClients = 0;
-        if (allUsers) {
-          numClients = Object.keys(allUsers).length;
-        }
-    
-        if (numClients === 0) {
-          client.emit('unknownCode');
-          return;
-        } else if (numClients > 4) {
-          client.emit('tooManyPlayers');
-          return;
-        }
-    
+    async function handleJoinGame(roomName) {
+        console.log("function handleJoinGame, room :"+ roomName);
+
+        //check number of socket connected to a room
+        let sockets = await io.in(roomName).allSockets();
+        console.log("numbers of clients " + sockets.size);
+        if (sockets.size === 0) {
+            client.emit('unknownCode');
+            return;
+          } else if (sockets.size >= 3) {
+            client.emit('tooManyPlayers');
+            return;
+          }
+
         clientRooms[client.id] = roomName;
     
         client.join(roomName);
-        client.number = 2;
-        client.emit('init', 2);
+        client.number 
+        client.emit('await', 2);
         
-        startGameInterval(roomName);*/
+        //startGameInterval(roomName);
     }
     function handleNewGame() {
-        console.log("function handleNewGame");
-        /*let roomName = makeid(5);
+        let roomName = makeid(5);
         clientRooms[client.id] = roomName;
         client.emit('gameCode', roomName);
-
-        state[roomName] = initGame();
+        console.log("new game code " + roomName);
+        //state[roomName] = initGame();
 
         client.join(roomName);
         client.number = 1;
-        client.emit('init', 1);*/
+        client.emit('await', 1);
     }
 
     function handleKeydown(keyCode) {

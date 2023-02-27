@@ -6,156 +6,248 @@ const server = http.createServer(app);
 const fs = require("fs");
 const url = require("url");
 
-const io = require('socket.io')(server, {cors: {origin: "*"}});
+const io = require('socket.io')(server, { cors: { origin: "*" } });
 
 //const { FRAME_RATE } = require('./constants') 
 const { makeid, loadMapData } = require('./utils');
 //const { Console } = require('console');
 
-//const state = {};
+const MAX_PLAYER_PER_ROOM = 3;
+const gamesState = {};
 const clientRooms = {};
 
 
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/frontend/index.html');
-    //res.send('<h1>Hello world</h1>'); 
+	res.sendFile(__dirname + '/frontend/index.html');
+	//res.send('<h1>Hello world</h1>'); 
 });
 
 app.get('/solo', (req, res) => {
-    res.sendFile(__dirname + '/frontend/solo.html');
+	res.sendFile(__dirname + '/frontend/solo.html');
 })
 
 app.get('/coop', (req, res) => {
-    res.sendFile(__dirname + '/frontend/coop.html');
+	res.sendFile(__dirname + '/frontend/coop.html');
 })
 
 app.get('/image/:fileName', (req, res) => {
-    var img = fs.readFileSync("./image/"+ req.params.fileName);
-    res.set('Content-Type', 'image/png');
-    res.send(img);
+	var img = fs.readFileSync("./image/" + req.params.fileName);
+	res.set('Content-Type', 'image/png');
+	res.send(img);
 })
 
 /********************************** ROOTING FOR STATIC FILES IN SOLO MODE ********************************** */
 app.get('/static/js/:fileName', (req, res) => {
-    var js = fs.readFileSync("./static/js/"+ req.params.fileName, "utf8");
-    res.set('Content-Type', 'text/javascript');
-    res.send(js);
-})
-app.get('/static/js/lib/:fileName', (req, res) => {
-    var js = fs.readFileSync("./static/js/lib/"+ req.params.fileName, "utf8");
-    res.set('Content-Type', 'text/javascript');
-    res.send(js);
+	var filePath = "./static/js/lib/" + req.params.fileName;
+	//if (fs.existsSync(filePath)) {
+	var js = fs.readFileSync("./static/js/" + req.params.fileName, "utf8");
+	res.set('Content-Type', 'text/javascript');
+	res.send(js);
+	//}else {
+	//  res.status(404).send('<h1>404 Ressource not found </h1>');
+	//}
 })
 
+app.get('/static/js/lib/:fileName', (req, res) => {
+	var filePath = "./static/js/lib/" + req.params.fileName;
+	//if (fs.existsSync(filePath)) {
+	var js = fs.readFileSync(filePath, "utf8");
+	res.set('Content-Type', 'text/javascript');
+	res.send(js);
+	//}else {
+	//  res.status(404).send('<h1>404 Ressource not found </h1>');
+	//}
+})
 
 /** ROOTING for map images */
-app.get('/map/:mapID', (req, res) =>{
-    //var img = fs.readFileSync("./maps/"+req.params.mapID+".png");
-    var promise = loadMapData("./maps/"+req.params.mapID+".png");
+app.get('/map/:mapID', (req, res) => {
+	//var img = fs.readFileSync("./maps/"+req.params.mapID+".png");
+	var imgPath = "./maps/" + req.params.mapID + ".png";
+	var jsonPath = "./maps/" + req.params.mapID + ".json";
+	// check for json map format
+	if (fs.existsSync(jsonPath)) {
+		let rawdata = fs.readFileSync(jsonPath);
+		let json = JSON.parse(rawdata);
+		res.set('Content-Type', 'application/json');
+		res.status(200);
+		res.send(json);
+	} else if (fs.existsSync(imgPath)) {
+		// read image and create json format from image
+		var promise = loadMapData(imgPath);
 
-    promise.then(function(promiseResult){
-        var map = promiseResult;
-        
-        res.set('Content-Type', 'application/json');
-        res.status(200);
-        var json = JSON.stringify(map);
-        res.send(json);
-    });
-    
-    
-    
+		promise.then(function (promiseResult) {
+			var map = promiseResult;
+			var json = JSON.stringify(map);
+			fs.writeFileSync(jsonPath, json);
+			res.set('Content-Type', 'application/json');
+			res.status(200);
+			res.send(json);
+		});
+	} else {
+		res.status(404).send('<h1>404 Ressource not found </h1>');
+	}
 })
 
 
 server.listen(3000, () => {
-    console.log('listening on port 3000..');
-
+	console.log('listening on port 3000..');
 })
 
 
 io.on('connection', client => {
 
-    console.log("CLIENT CONNECTED");
+	console.log("CLIENT CONNECTED");
 
-    client.on('keydown', handleKeydown);
-    client.on('newGame', handleNewGame);
-    client.on('joinGame', handleJoinGame);
-    
+	client.on('keydown', handleKeydown);
+	client.on('newGame', handleNewGame);
+	client.on('joinGame', handleJoinGame);
+	client.on('updateGameState', handleUpdateGameState);
 
-    async function handleJoinGame(roomName) {
-        console.log("function handleJoinGame, room :"+ roomName);
+	/**
+	 * 
+	 * @param {string} roomName 
+	 * @returns 
+	 */
+	async function handleJoinGame(roomName) {
+		//check number of socket connected to a room
+		let sockets = await io.in(roomName).allSockets();
+		if (sockets.size === 0) {
+			client.emit('unknownCode');
+			return;
+		} else if (sockets.size >= MAX_PLAYER_PER_ROOM) {
+			client.emit('tooManyPlayers');
+			return;
+		}
 
-        //check number of socket connected to a room
-        let sockets = await io.in(roomName).allSockets();
-        console.log("numbers of clients " + sockets.size);
-        if (sockets.size === 0) {
-            client.emit('unknownCode');
-            return;
-          } else if (sockets.size >= 3) {
-            client.emit('tooManyPlayers');
-            return;
-          }
+		clientRooms[client.id] = roomName;
+		client.emit('GameCode', roomName);
+		client.join(roomName);
+		clientRooms[client.id] = roomName;
+		//sockets.size equals number of clients in room before actual client joins
+		client.number = sockets.size; // id of player in room
+		client.emit('playerID', client.number);
+		io.in(roomName).emit('await', sockets.size + 1, roomName);
 
-        clientRooms[client.id] = roomName;
-    
-        client.join(roomName);
-        client.number 
-        client.emit('await', 2);
-        
-        //startGameInterval(roomName);
-    }
-    function handleNewGame() {
-        let roomName = makeid(5);
-        clientRooms[client.id] = roomName;
-        client.emit('gameCode', roomName);
-        console.log("new game code " + roomName);
-        //state[roomName] = initGame();
+		// init game when room is full
+		if (client.number == MAX_PLAYER_PER_ROOM - 1) {
+			io.in(roomName).emit('init');
+		}
 
-        client.join(roomName);
-        client.number = 1;
-        client.emit('await', 1, roomName);
-    }
 
-    function handleKeydown(keyCode) {
-        Console.log("function handleKeydown");
-        /*const roomName = clientRooms[client.id];
-        if (!roomName) {
-            return;
-        }
-        try {
-            keyCode = parseInt(keyCode);
-        } catch(e) {
-            console.error(e);
-            return;
-        }
+		//startGameInterval(roomName);
+	}
+	function handleNewGame() {
+		let roomName = makeid(5);
+		clientRooms[client.id] = roomName;
+		client.emit('gameCode', roomName);
+		18361
+		console.log("new game code " + roomName);
+		//state[roomName] = initGame();
+		client.emit('playerID', 0);
+		client.join(roomName);
+		client.number = 1;
+		client.emit('await', 1, roomName);
+	}
 
-        const vel = getUpdatedVelocity(keyCode);
+	/**
+	 * 
+	 * @param {struct} state state of the game from playerID
+	 * @param {string} roomName game code of the room
+	 * @param {int} playerID player in room
+	 */
+	function handleUpdateGameState(state, roomName, playerID) {
+		console.log("handleUpdateGameState");
+		gamesState[roomName].players[playerID].pos = state.players[playerID].pos;
 
-        if (vel) {
-            state[roomName].players[client.number - 1].vel = vel;
-        }*/
-    }
+		if (playerID === 0) {
+			gamesState[roomName].food = state.food;
+		}
+		io.in(roomName).emit('gameState', json.stringify(gamesState[roomName]));
+	}
+
+	function handleKeydown(keyCode) {
+		Console.log("function handleKeydown");
+		/*const roomName = clientRooms[client.id];
+		if (!roomName) {
+			return;
+		}
+		try {
+			keyCode = parseInt(keyCode);
+		} catch(e) {
+			console.error(e);
+			return;
+		}
+
+		const vel = getUpdatedVelocity(keyCode);
+
+		if (vel) {
+			state[roomName].players[client.number - 1].vel = vel;
+		}*/
+	}
 });
 
 function startGameInterval(roomName) {
-    const intervalId = setInterval(() => {
-        const winner = gameLoop(state[roomName]);
-        
-        if (!winner) {
-            emitGameState(roomName, state[roomName])
-        } else {
-            emitGameOver(roomName, winner);
-            state[roomName] = null;
-            clearInterval(intervalId);
-        }
-    }, 1000 / FRAME_RATE);
+	const intervalId = setInterval(() => {
+		const winner = gameLoop(state[roomName]);
+
+		if (!winner) {
+			emitGameState(roomName, state[roomName])
+		} else {
+			emitGameOver(roomName, winner);
+			state[roomName] = null;
+			clearInterval(intervalId);
+		}
+	}, 1000 / FRAME_RATE);
 }
 
 function emitGameOver(room, winner) {
-    io.sockets.in(room)
-      .emit('gameOver', JSON.stringify({ winner }));
+	io.sockets.in(room)
+		.emit('gameOver', JSON.stringify({ winner }));
 }
 
 
 
-
+/**
+ * 
+ * @param {} pos1 
+ * @param {*} pos2 
+ * @param {*} pos3 
+ * @returns players
+ */
+function createGameState() {
+	return {
+		playerID: 0,
+		players: [{
+			pos: {
+				x: 0,
+				y: 0,
+			},
+			vel: {
+				x: 0,
+				y: 0,
+			},
+			color: 0xffff00,
+		}, {
+			pos: {
+				x: 0,
+				y: 0,
+			},
+			vel: {
+				x: 0,
+				y: 0,
+			},
+			color: 0xff0000,
+		}, {
+			pos: {
+				x: 0,
+				y: 0,
+			},
+			vel: {
+				x: 0,
+				y: 0,
+			},
+			color: 0x00ff00,
+		}],
+		food: [],
+	};
+}

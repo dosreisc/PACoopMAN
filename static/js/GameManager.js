@@ -1,5 +1,5 @@
 
-const DIRECTION = { 
+const DIRECTION = {
 	UP: 'UP',
 	DOWN: 'DOWN',
 	RIGHT: 'RIGHT',
@@ -7,7 +7,7 @@ const DIRECTION = {
 	NONE: 'NONE'
 };
 
-const OPPOSITE_DIRECTION = { 
+const OPPOSITE_DIRECTION = {
 	UP: DIRECTION.DOWN,
 	DOWN: DIRECTION.UP,
 	RIGHT: DIRECTION.LEFT,
@@ -15,52 +15,52 @@ const OPPOSITE_DIRECTION = {
 	NONE: DIRECTION.NONE
 };
 
-const SPEED = 0.05; 
+const SPEED = 0.05;
 const MOVEMENT = {
 	LEFT: { x: -SPEED, y: 0 },
 	RIGHT: { x: SPEED, y: 0 },
-	UP: { x: 0, y : SPEED },
+	UP: { x: 0, y: SPEED },
 	DOWN: { x: 0, y: -SPEED },
 	NONE: { x: 0, y: 0 }
 };
 
 const KEYS = {
-	ArrowLeft:  DIRECTION.LEFT,
+	ArrowLeft: DIRECTION.LEFT,
 	ArrowRight: DIRECTION.RIGHT,
 	ArrowUp: DIRECTION.UP,
 	ArrowDown: DIRECTION.DOWN,
-	Space : DIRECTION.NONE
+	Space: DIRECTION.NONE
 };
 
 
 
 const gameState = {
-	pacman:{
-		pos:{
+	pacman: {
+		pos: {
 			x: 0,
 			y: 0,
 		},
 	},
-	ghostRed:{
-		pos:{
+	ghostRed: {
+		pos: {
 			x: 0,
 			y: 0,
 		},
 	},
-	ghostGreen:{
-		pos:{
+	ghostGreen: {
+		pos: {
 			x: 0,
 			y: 0,
 		},
 	},
-	ghostPurple:{
-		pos:{
+	ghostPurple: {
+		pos: {
 			x: 0,
 			y: 0,
 		},
 	},
-	ghostWhite:{
-		pos:{
+	ghostWhite: {
+		pos: {
 			x: 0,
 			y: 0,
 		},
@@ -83,7 +83,7 @@ const MAX_ENEMIES = 5;
 var playing;
 var paused;
 
-const SIZE  = 21
+const SIZE = 21
 
 function main() {
 	console.log('main GameManager');
@@ -91,8 +91,8 @@ function main() {
 
 	// init scene
 	scene = new THREE.Scene();
-	scene.background = new THREE.Color( 0x3f3f3f );
-	
+	scene.background = new THREE.Color(0x3f3f3f);
+
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	document.body.appendChild(renderer.domElement);
@@ -101,50 +101,50 @@ function main() {
 	camera.position.z = 12;
 	camera.position.x = 0;
 	scene.add(camera);
-	
+
 	playing = true;
 	paused = false;
 
 	//create objects
 	// load map from image 
-	[plane, walls, foods, playerObj, path, enemies_spawns] = mapGenerator.generateMap("map1", scene);
-	player =  new Player(playerObj);
-
+	[plane, walls, foods, playerObj, path, enemies_spawns] = mapGenerator.generateMap("map2", scene);
+	player = new Player(playerObj);
+	console.log("path = " + JSON.stringify(path));
 	// spawn enemies
 	for (let i = 0; i < MAX_ENEMIES; i++) {
 		spawnEnemy();
 	}
-	
+
 	//getListofMaps();
 
-	function render(){
+	function render() {
 
-		if (!playing | paused ){
+		if (!playing | paused) {
 			requestAnimationFrame(render);
 			return;
 		}
 
 		player.move(path);
-	
+
 		enemies.forEach(enemy => {
 			enemy.move(path);
 		});
 
 		checkCollision();
 		checkCollisionFood();
-		
+
 		requestAnimationFrame(render);
 		renderer.render(scene, camera);
 	}
 	render();
 }
 
-function spawnEnemy(){
+function spawnEnemy() {
 	var geometry = new THREE.SphereGeometry(0.4);
-	var material = new THREE.MeshBasicMaterial( {color: 0xff0000} );
-	var enemy = new THREE.Mesh( geometry, material );
+	var material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+	var enemy = new THREE.Mesh(geometry, material);
 	var i = Math.floor(Math.random() * enemies_spawns.length);
-	let {x,y} = enemies_spawns[i];
+	let { x, y } = enemies_spawns[i];
 	enemy.position.x = x;
 	enemy.position.y = y;
 	scene.add(enemy);
@@ -152,12 +152,12 @@ function spawnEnemy(){
 }
 
 function checkCollision() {
-	let[playerX, playerY] = player.getCoordinates();
+	let [playerX, playerY] = player.getCoordinates();
 	enemies.forEach(enemy => {
-		let[enemyX, enemyY] = enemy.getCoordinates();
+		let [enemyX, enemyY] = enemy.getCoordinates();
 
 		//console.log(playerX + ' ' + playerY + ' ' + enemyX + ' ' + enemyY);
-		if (enemyX == playerX & enemyY == playerY){
+		if (enemyX == playerX & enemyY == playerY) {
 			playing = false;
 			alert("GameOver! Press F5 to reload the game.");
 		}
@@ -169,21 +169,21 @@ function checkCollision() {
 window.addEventListener("keydown", function (event) {
 
 	//change player direction
-	if (KEYS[event.code]){
+	if (KEYS[event.code]) {
 		player.setDirection(KEYS[event.code]);
 		paused = false;
 	}
 
 	// zoom in
-	if (event.code == "KeyI"){
+	if (event.code == "KeyI") {
 		camera.position.z -= 0.5;
 	}
 	// zoom out
-	if (event.code == "KeyO"){
+	if (event.code == "KeyO") {
 		camera.position.z += 0.5;
 	}
 
-	if (event.code == "Escape"){
+	if (event.code == "Escape") {
 		paused = !paused;
 		console.log("pause");
 	}
@@ -211,20 +211,20 @@ function checkCollisionFood() {
 			// remove food from list of foods and from scene
 			var index = -1;
 			for (let i = 0; i < foods.length; i++) {
-				if (collisionResults[0].object.name === foods[i].name ){
+				if (collisionResults[0].object.name === foods[i].name) {
 					index = i;
 				}
 			}
-			if (index >= 0){
+			if (index >= 0) {
 				foods.splice(index, 1);
 			}
 			scene.remove(collisionResults[0].object);
-			console.log("lenght "+ foods.length);
+			console.log("lenght " + foods.length);
 			score++;
 		}
 	}
-	if (foods.length == 0){
-		playing=false;
+	if (foods.length == 0) {
+		playing = false;
 		alert("You win! Press F5 to reload the game.");
 	}
 }
@@ -244,9 +244,9 @@ function checkCollisionFood() {
 		console.log(mapsData);
 		mapsData.forEach(array => {
 			var img = document.createElement("img");
-    		img.src = array[1];
-    		//img.width = width;
-    		//img.height = height;
+			img.src = array[1];
+			//img.width = width;
+			//img.height = height;
 			//img.alt = alt;
 			document.getElementById("form").appendChild(img);
 
@@ -258,3 +258,9 @@ function checkCollisionFood() {
 	}
 }*/
 
+
+
+Number.prototype.mod = function (n) {
+	"use strict";
+	return ((this % n) + n) % n;
+};

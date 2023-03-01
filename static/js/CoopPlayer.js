@@ -1,25 +1,15 @@
-class Player {
-	/**
-	 * 
-	 * @param {struct {x, y}} pos 
-	 * @param {hex} hexcolor 
-	 * @returns 
-	 */
+class CoopPlayer {
 	constructor(pos, hexcolor = 0xffff00) {
 		var geometry = new THREE.SphereGeometry(0.4);
 		var material = new THREE.MeshBasicMaterial({ color: hexcolor });
 		var obj = new THREE.Mesh(geometry, material);
 		obj.position.x = pos.x;
 		obj.position.y = pos.y;
-		obj.name = "Player";
+		obj.name = "CoopPlayer";
 		this.object = obj;
 		this.direction = DIRECTION.NONE;
 		this.newDirection = DIRECTION.NONE;
-
-		//console.log("direction " + this.direction);
 	}
-
-	
 
 	move(path, speed = 0.05) {
 		if (this.object == null) 
@@ -42,11 +32,11 @@ class Player {
 			this.object.position.y *= -1;
 		}
 
-
+		this.direction = this.newDirection;
 
 		// TODO
 		//autoriser les movement uniquement lorsque la position x et y est très proche de nombre entier
-		if ((Math.abs(posX) % 1 < 0.05 | Math.abs(posX) % 1 > 0.95)
+		/*if ((Math.abs(posX) % 1 < 0.05 | Math.abs(posX) % 1 > 0.95)
 			& (Math.abs(posY) % 1 < 0.05 | Math.abs(posY) % 1 > 0.95)) {
 
 
@@ -81,27 +71,7 @@ class Player {
 				}
 			}
 
-			var nextBox;
-			// check collision with wall
-			switch (this.direction) {
-				case DIRECTION.DOWN:
-					nextBox = path[(y + 1).mod(SIZE)][x];
-					break;
-				case DIRECTION.UP:
-					nextBox = path[(y - 1).mod(SIZE)][x];
-					break;
-				case DIRECTION.LEFT:
-					nextBox = path[y][(x - 1).mod(SIZE)];
-					break;
-				case DIRECTION.RIGHT:
-					nextBox = path[y][(x + 1).mod(SIZE)]
-					break;
-			}
-			if (nextBox == 0) {
-				//change direction
-				this.direction = DIRECTION.NONE;
-			}
-		}
+		}*/
 	}
 
 	setDirection(dir) {
@@ -150,5 +120,4 @@ class Player {
 		let posY = math.round(((x + 1) * -1 ) + SIZE / 2 + 0.5);
 		return {posX, posY};
 	}
-
 }

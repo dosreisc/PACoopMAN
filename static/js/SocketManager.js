@@ -62,6 +62,10 @@ function handleGameState(state) {
 	updateGameState(state); // CoopGameManager.updateGameState()
 }
 
+function emitState(gameState, id){
+	socket.emit('playerState', gameState,  GAME_CODE, id);
+}
+
 function handleGameOver() {
 
 }
@@ -84,6 +88,7 @@ function handleWaiting(numPlayers, roomname) {
 }
 
 function handlePlayerID(id) {
+	console.log("Player id " + id);
 	playerID = id;
 }
 

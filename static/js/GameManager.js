@@ -32,42 +32,6 @@ const KEYS = {
 	Space: DIRECTION.NONE
 };
 
-
-
-const gameState = {
-	pacman: {
-		pos: {
-			x: 0,
-			y: 0,
-		},
-	},
-	ghostRed: {
-		pos: {
-			x: 0,
-			y: 0,
-		},
-	},
-	ghostGreen: {
-		pos: {
-			x: 0,
-			y: 0,
-		},
-	},
-	ghostPurple: {
-		pos: {
-			x: 0,
-			y: 0,
-		},
-	},
-	ghostWhite: {
-		pos: {
-			x: 0,
-			y: 0,
-		},
-	},
-
-}
-
 var scene;
 var camera;
 var renderer;
@@ -107,8 +71,11 @@ function main() {
 
 	//create objects
 	// load map from image 
-	[plane, walls, foods, playerObj, path, enemies_spawns] = mapGenerator.generateMap("map2", scene);
-	player = new Player(playerObj);
+	[plane, walls, foods, playerPos, path, enemies_spawns] = mapGenerator.generateMap("map2", scene);
+
+	player = new Player(playerPos);
+	scene.add(player.getObject());
+
 	console.log("path = " + JSON.stringify(path));
 	// spawn enemies
 	for (let i = 0; i < MAX_ENEMIES; i++) {
@@ -124,7 +91,7 @@ function main() {
 			return;
 		}
 
-		player.move(path);
+		player.move(path, 0.05);
 
 		enemies.forEach(enemy => {
 			enemy.move(path);
@@ -170,6 +137,7 @@ window.addEventListener("keydown", function (event) {
 
 	//change player direction
 	if (KEYS[event.code]) {
+		console.log("direction " + KEYS[event.code]);
 		player.setDirection(KEYS[event.code]);
 		paused = false;
 	}

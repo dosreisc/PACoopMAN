@@ -87,6 +87,19 @@ class MapGenerator {
 						walls.push(wall);
 						break;
 
+					case "S_FOOD":
+						// special foo object spawn
+						var geometry = new THREE.SphereGeometry(0.2);
+						var material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+						var food = new THREE.Mesh(geometry, material);
+						food.name = "s_food" + foods.length;
+						food.position.x = -x + (SIZE - 1) / 2;
+						food.position.y = -y + (SIZE - 1) / 2;
+						scene.add(food);
+						foods.push(food);
+						path[y].push(1); //define path
+						break;
+
 					case "FOOD":
 						var geometry = new THREE.SphereGeometry(0.1);
 						var material = new THREE.MeshBasicMaterial({ color: 0xffffff });
@@ -98,19 +111,6 @@ class MapGenerator {
 						scene.add(food);
 						foods.push(food);
 
-						path[y].push(1); //define path
-						break;
-
-					case "S_FOOD":
-						// special foo object spawn
-						var geometry = new THREE.SphereGeometry(0.2);
-						var material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-						var food = new THREE.Mesh(geometry, material);
-						food.name = "s_food" + foods.length;
-						food.position.x = -x + (SIZE - 1) / 2;
-						food.position.y = -y + (SIZE - 1) / 2;
-						scene.add(food);
-						foods.push(food);
 						path[y].push(1); //define path
 						break;
 

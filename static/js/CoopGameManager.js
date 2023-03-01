@@ -17,10 +17,10 @@ const OPPOSITE_DIRECTION = {
 
 const SPEED = 0.05;
 const MOVEMENT = {
-	LEFT: { x: -SPEED, y: 0 },
-	RIGHT: { x: SPEED, y: 0 },
-	UP: { x: 0, y: SPEED },
-	DOWN: { x: 0, y: -SPEED },
+	LEFT: { x: -1, y: 0 },
+	RIGHT: { x: 1, y: 0 },
+	UP: { x: 0, y: 1 },
+	DOWN: { x: 0, y: -1 },
 	NONE: { x: 0, y: 0 }
 };
 
@@ -41,31 +41,22 @@ const gameState = {
 			x: 0,
 			y: 0,
 		},
-		vel: {
-			x: 0,
-			y: 0,
-		},
+		vel: 'NONE',
 		color: 0xffff00,
 	}, {
 		pos: {
 			x: 0,
 			y: 0,
 		},
-		vel: {
-			x: 0,
-			y: 0,
-		},
+		vel: 'NONE',
 		color: 0xff0000,
 	}, {
 		pos: {
 			x: 0,
 			y: 0,
 		},
-		vel: {
-			x: 0,
-			y: 0,
-		},
-		color: 0x00ff00,
+		vel: 'NONE',
+		color: 0x7e15bf,
 	}],
 	food: [],
 
@@ -110,23 +101,26 @@ function main() {
 	//create objects
 	// load map from image 
 	[plane, walls, foods, playerPos, path, enemies_spawns] = mapGenerator.generateMap("map1", scene);
-	//player = new Player(playerObj);
-	var playerObj= null;
-	if (playerID == 0) {
-		playerObj = createPlayerObj(playerPos);
-	}else {
-		playerObj = createPlayerObj(enemies_spawns[0]);
+	
+	for (let i = 0; i < gameState.players.length; i++) {
+		if (playerID == 0 &&  i == playerID) { // player is PAC MAN
+			player = new Player(playerPos, gameState.players[i].color);
+		}else if ( playerID != 0 && playerID == i ){ // Player is not pac man
+			player = new Player(enemies_spawns[0], gameState.players[i].color);
+		}else if (playerID != 0 && i == 0){ // pac man is coop player
+			var coopPlayer = new CoopPlayer(playerPos, gameState.players[i].color)
+			enemies.push(coopPlayer);
+			scene.add(coopPlayer.getObject());
+		}else {	
+			var coopPlayer = new CoopPlayer(enemies_spawns[0], gameState.players[i].color)
+			enemies.push(coopPlayer);
+			scene.add(coopPlayer.getObject());
+		}
+		
 	}
-	player = new Player(playerObj);
-	scene.add(playerObj);
-	// spawn enemies
-	/*for (let i = 0; i < MAX_ENEMIES; i++) {
-		spawnEnemy();
-	}*/
 
-	//render();
+	scene.add(player.getObject());
 
-	// send map Loaded
 	render();
 }
 
@@ -138,38 +132,51 @@ function render() {
 		return;
 	}
 
-	player.move(path);
+	player.move(path, SPEED);
+	enemies.forEach(enemy => {
+		enemy.move(path, SPEED);
+	});
+	
+	gameState.players[playerID].pos = player.getPosition();
+	gameState.players[playerID].vel = player.getVel();
 
-
-	/*enemies.forEach(enemy => {
-		enemy.move(path);
-	});*/
+	// send state to server
+	emitState(gameState, playerID);
 
 	//checkCollision();
-	//checkCollisionFood();
-	// TODO  send state to server
+	if (playerID === 0){
+		//emitState(gameState, playerID);
+		checkCollisionFood();
+	}
+	
+	
 	requestAnimationFrame(render);
 	renderer.render(scene, camera);
 }
 
 /**
  * Send game state to server from player perspective
- * @param {struct} gameState 
+ * @param {struct} state 
  */
-function updateGameState(gameState) {
+function updateGameState(state) {
+	//console.log(JSON.stringify(state));
+	for (let i = 0, enemyCount = 0; i < state.players.length; i++ ) {
+		if(i != playerID){
+			enemies[enemyCount].setDirection(state.players[i].vel);
+			let localEnemyPos = enemies[enemyCount].getPosition();
+			let networkEnemyPos = state.players[i].pos;
+			let deltaX = Math.abs(localEnemyPos.x - networkEnemyPos.x);
+			let deltaY = Math.abs(localEnemyPos.y - networkEnemyPos.y);
+			if (deltaX > 0.5  || deltaY > 0.5){
+				enemies[enemyCount].setPosition(networkEnemyPos);
+			}
+			enemyCount++;
+		}
+		
+	}
+	// todo remove food
 
 }
-
-function createPlayerObj(pos) {
-	var geometry = new THREE.SphereGeometry(0.4);
-	var material = new THREE.MeshBasicMaterial({ color: gameState.players[playerID].color });
-	obj = new THREE.Mesh(geometry, material);
-	obj.position.x = pos.x;
-	obj.position.y = pos.y;
-	obj.name = "Player";
-	return obj;
-}
-
 
 /*function spawnEnemy(){
 	var geometry = new THREE.SphereGeometry(0.4);
@@ -225,7 +232,13 @@ window.addEventListener("keydown", function (event) {
 
 // check player collision with food/special food and enemies
 function checkCollisionFood() {
-
+/**
+ * problem with special s_food
+ * If the s_food size is bigger than 0.1 it is automaticaly in collision with the player
+ * might need to completely redo the checkCollisionFood function
+ * 
+ * also when going over the edge, the food on the same line/collumn as the player is in collision even tough it is not
+ */
 	var playerObj = player.getObject();
 	var originPoint = playerObj.position.clone();
 	/*var originPointFastForward = originPoint;
@@ -250,7 +263,9 @@ function checkCollisionFood() {
 			}
 			if (index >= 0) {
 				foods.splice(index, 1);
+				gameState.food[index] = 0;
 			}
+			console.log("food removed "+collisionResults[0].object.name)
 			scene.remove(collisionResults[0].object);
 			console.log("lenght " + foods.length);
 			score++;
@@ -259,50 +274,6 @@ function checkCollisionFood() {
 	if (foods.length == 0) {
 		playing = false;
 		alert("You win! Press F5 to reload the game.");
-	}
-}
-
-
-
-class CoopPlayer {
-	constructor(obj) {
-		this.object = obj;
-		this.direction = DIRECTION.NONE;
-	}
-	move(path) {
-		let { x, y } = MOVEMENT[this.direction];
-		//move 
-		this.object.position.x += x;
-		this.object.position.y += y;
-
-
-		var posX = this.object.position.x;
-		var posY = this.object.position.y;
-
-
-		// check for edge -> loop
-		if (posX > SIZE / 2 | posX < SIZE / 2 * (-1)) {
-			this.object.position.x *= -1;
-		}
-		if (posY > SIZE / 2 | posY < SIZE / 2 * (-1)) {
-			this.object.position.y *= -1;
-		}
-	}
-
-	getCoordinates() {
-		var posX = this.object.position.x;
-		var posY = this.object.position.y;
-		let x = Math.round(posX + SIZE / 2 - 0.5);
-		let y = (Math.round(posY - SIZE / 2 - 0.5) * -1) - 1;
-		return [x, y];
-	}
-
-	getDirection() {
-		return this.direction;
-	}
-
-	getObject() {
-		return this.object;
 	}
 }
 
